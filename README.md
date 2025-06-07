@@ -1,0 +1,3 @@
+# clisp
+
+following [buildyourownlisp](https://www.buildyourownlisp.com/) to learn c after getting smashed by zig & rust ....
