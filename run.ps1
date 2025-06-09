@@ -1,0 +1,2 @@
+zig cc -std=c99 -Wall parsing.c mpc.c -o parsing.exe
+./parsing.exe

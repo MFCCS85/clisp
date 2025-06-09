@@ -1,4 +1,5 @@
 #include "mpc.h"
+#include <stdlib.h>
 
 #ifdef _WIN32
 
@@ -20,6 +21,28 @@ void add_history(char *unused) {}
 #include <editline/readline.h>
 #endif
 
+long power(long x, long y) {
+  long result = 1;
+  for (long i = 0; i < y; i++) {
+    result = result * y;
+  }
+  return result;
+}
+
+long _max(long x, long y) {
+  if (x > y)
+    return x;
+  else
+    return y;
+}
+
+long _min(long x, long y) {
+  if (x < y)
+    return x;
+  else
+    return y;
+}
+
 long eval_op(long x, char *op, long y) {
   if (strcmp(op, "+") == 0 || strcmp(op, "add") == 0) {
     return x + y;
@@ -33,6 +56,18 @@ long eval_op(long x, char *op, long y) {
   if (strcmp(op, "/") == 0 || strcmp(op, "div") == 0) {
     return x / y;
   }
+  if (strcmp(op, "%") == 0 || strcmp(op, "mod") == 0) {
+    return x % y;
+  }
+  if (strcmp(op, "^") == 0 || strcmp(op, "exp") == 0) {
+    return power(x, y);
+  }
+  if (strcmp(op, "max") == 0) {
+    return _max(x, y);
+  }
+  if (strcmp(op, "min") == 0) {
+    return _min(x, y);
+  }
   return 0;
 }
 
@@ -41,36 +76,40 @@ long eval(mpc_ast_t *t) {
     return atoi(t->contents);
   }
 
-  char *op = t->children[1]->contents;
+  if (strstr(t->children[1]->tag, "operator")) {
+    char *op = t->children[1]->contents;
 
-  long x = eval(t->children[2]);
+    long x = eval(t->children[2]);
 
-  int i = 3;
-  while (strstr(t->children[i]->tag, "expr")) {
-    x = eval_op(x, op, eval(t->children[i]));
-    i++;
+    int i = 3;
+    while (strstr(t->children[i]->tag, "expr")) {
+      x = eval_op(x, op, eval(t->children[i]));
+      i++;
+    }
+    return x;
   }
-  return x;
+
+  return atoi(t->children[1]->contents);
 }
 
 // bonus
 long num_leaves(mpc_ast_t *t) {
-  if (t->children_num == 0)
+  if (strstr(t->tag, "number"))
     return 1;
 
   int count = 0;
   for (long i = 0; i < t->children_num; i++) {
     count += num_leaves(t->children[i]);
   }
-  
+
   return count;
 }
 
 long num_branches(mpc_ast_t *t) {
   if (t->children_num == 0)
-    return 0; // it's a leaf
+    return 0;
 
-  long count = 1; // count this node as a branch
+  long count = 1;
   for (int i = 0; i < t->children_num; i++) {
     count += num_branches(t->children[i]);
   }
@@ -85,12 +124,13 @@ int main(int argc, char **argv) {
   mpc_parser_t *Expr = mpc_new("expr");
   mpc_parser_t *Lispy = mpc_new("lispy");
 
-  mpca_lang(MPCA_LANG_DEFAULT, "          \
-      number   : /-?[0-9]+/ ;                             \
-      operator : '+'   | '-'   | '*'   | '/'   | '%' |    \
-                 /add/ | /sub/ | /mul/ | /div/ | /mod/ ;  \
-      expr     : <number> | '(' <operator> <expr>+ ')' ;  \
-      lispy    : /^/ <operator> <expr>+ /$/ ;             \
+  mpca_lang(MPCA_LANG_DEFAULT, "                  \
+      number   : /-?[0-9]+/ ;                                     \
+      operator : '+'   | '-'   | '*'   | '/'   | '%'   | '^' |    \
+                 /add/ | /sub/ | /mul/ | /div/ | /mod/ |/exp/|    \
+                 /max/ | /min/ | /- /;                                  \
+      expr     : <number> | '(' <operator> <expr>+ ')' ;          \
+      lispy    : /^/ <operator>? <expr>+ /$/ ;                     \
     ",
             Number, Operator, Expr, Lispy);
   puts("Lispy Version 0.0.0.0.1");
@@ -103,7 +143,7 @@ int main(int argc, char **argv) {
     mpc_result_t r;
     if (mpc_parse("<stdin>", input, Lispy, &r)) {
       long result = eval(r.output);
-      printf("%li\n", result);
+      printf("RESULT ---> %li\n", result);
       printf("LEAVES ---> %li\n", num_leaves(r.output));
       printf("BRANCHES ---> %li\n", num_branches(r.output));
       mpc_ast_delete(r.output);
