@@ -72,6 +72,9 @@ long eval_op(long x, char *op, long y) {
 }
 
 long eval(mpc_ast_t *t) {
+  if (strstr(t->tag, "lispy")) {
+  }
+
   if (strstr(t->tag, "number")) {
     return atoi(t->contents);
   }
@@ -128,9 +131,9 @@ int main(int argc, char **argv) {
       number   : /-?[0-9]+/ ;                                     \
       operator : '+'   | '-'   | '*'   | '/'   | '%'   | '^' |    \
                  /add/ | /sub/ | /mul/ | /div/ | /mod/ |/exp/|    \
-                 /max/ | /min/ | /- /;                                  \
+                 /max/ | /min/ | /- /;                            \
       expr     : <number> | '(' <operator> <expr>+ ')' ;          \
-      lispy    : /^/ <operator>? <expr>+ /$/ ;                     \
+      lispy    : /^/ <operator>? <expr>+ /$/ ;                    \
     ",
             Number, Operator, Expr, Lispy);
   puts("Lispy Version 0.0.0.0.1");
