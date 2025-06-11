@@ -65,7 +65,7 @@ lval eval_op(lval x, char *op, lval y) {
   }
   if (strcmp(op, "/") == 0 || strcmp(op, "div") == 0) {
     value =
-        y.num == 0 ? lval_err(LERR_DIV_ZRO) : lval_num((double)x.num / y.num);
+        y.num == 0 ? lval_err(LERR_DIV_ZRO) : lval_num((double)(x.num / y.num));
   }
   if (strcmp(op, "%") == 0 || strcmp(op, "mod") == 0) {
     value = lval_num((long)x.num % (long)y.num);
@@ -142,9 +142,9 @@ int main(int argc, char **argv) {
       number   : /-?[0-9]+/ ;                                     \
       operator : '+'   | '-'   | '*'   | '/'   | '%'   | '^' |    \
                  /add/ | /sub/ | /mul/ | /div/ | /mod/ |/exp/|    \
-                 /max/ | /min/ | /- /;                            \
+                 /max/ | /min/ ;                                  \
       expr     : <number> | '(' <operator> <expr>+ ')' ;          \
-      lispy    : /^/<operator> <expr>+ /$/;          \
+      lispy    : /^/<operator> <expr>+ /$/;                       \
     ",
             Number, Operator, Expr, Lispy);
   puts("Lispy Version 0.0.0.0.1");
