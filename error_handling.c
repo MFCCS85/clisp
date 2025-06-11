@@ -18,7 +18,7 @@ lval lval_err(int x) {
 void lval_print(lval v) {
   switch (v.type) {
   case LVAL_NUM:
-    printf("%li", v.num);
+    printf("%.2f", v.num);
     break;
   case LVAL_ERR:
     if (v.err == LERR_DIV_ZRO) {

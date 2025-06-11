@@ -3,7 +3,7 @@ enum { LERR_DIV_ZRO, LERR_BAD_OP, LERR_BAD_NUM };
 
 typedef struct {
   int type;
-  long num;
+  double num;
   int err;
 } lval;
 

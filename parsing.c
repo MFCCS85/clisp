@@ -30,14 +30,14 @@ long power(long x, long y) {
   return result;
 }
 
-long _max(long x, long y) {
+double _max(long x, long y) {
   if (x > y)
     return x;
   else
     return y;
 }
 
-long _min(long x, long y) {
+double _min(long x, long y) {
   if (x < y)
     return x;
   else
@@ -52,31 +52,35 @@ lval eval_op(lval x, char *op, lval y) {
     return y;
   }
 
+  lval value = lval_num(0);
+
   if (strcmp(op, "+") == 0 || strcmp(op, "add") == 0) {
-    return lval_num(x.num + y.num);
+    value = lval_num(x.num + y.num);
   }
   if (strcmp(op, "-") == 0 || strcmp(op, "sub") == 0) {
-    return lval_num(x.num - y.num);
+    value = lval_num(x.num - y.num);
   }
   if (strcmp(op, "*") == 0 || strcmp(op, "mul") == 0) {
-    return lval_num(x.num * y.num);
+    value = lval_num(x.num * y.num);
   }
   if (strcmp(op, "/") == 0 || strcmp(op, "div") == 0) {
-    return y.num == 0 ? lval_err(LERR_DIV_ZRO) : lval_num(x.num / y.num);
+    value =
+        y.num == 0 ? lval_err(LERR_DIV_ZRO) : lval_num((double)x.num / y.num);
   }
   if (strcmp(op, "%") == 0 || strcmp(op, "mod") == 0) {
-    return lval_num(x.num / y.num);
+    value = lval_num((long)x.num % (long)y.num);
   }
   if (strcmp(op, "^") == 0 || strcmp(op, "exp") == 0) {
-    return lval_num(x.num / y.num);
+    value = lval_num(pow(x.num, y.num));
   }
   if (strcmp(op, "max") == 0) {
-    return lval_num(x.num / y.num);
+    value = lval_num(_max(x.num, y.num));
   }
   if (strcmp(op, "min") == 0) {
-    return lval_num(x.num / y.num);
+    value = lval_num(_min(x.num, y.num));
   }
-  return lval_num(0);
+
+  return value;
 }
 
 lval eval(mpc_ast_t *t) {
@@ -153,7 +157,7 @@ int main(int argc, char **argv) {
     mpc_result_t r;
     if (mpc_parse("<stdin>", input, Lispy, &r)) {
       lval result = eval(r.output);
-      printf("RESULT --->");
+      printf("RESULT ---> ");
       lval_print(result);
       printf("\n");
       printf("LEAVES ---> %li\n", num_leaves(r.output));
