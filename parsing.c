@@ -24,7 +24,7 @@ void add_history(char *unused) {}
 long power(long x, long y) {
   long result = 1;
   for (long i = 0; i < y; i++) {
-    result = result * y;
+    result = result * x;
   }
   return result;
 }
@@ -72,27 +72,24 @@ long eval_op(long x, char *op, long y) {
 }
 
 long eval(mpc_ast_t *t) {
-  if (strstr(t->tag, "lispy")) {
-  }
-
   if (strstr(t->tag, "number")) {
     return atoi(t->contents);
   }
 
-  if (strstr(t->children[1]->tag, "operator")) {
-    char *op = t->children[1]->contents;
+  char *op = t->children[1]->contents;
 
-    long x = eval(t->children[2]);
-
-    int i = 3;
-    while (strstr(t->children[i]->tag, "expr")) {
-      x = eval_op(x, op, eval(t->children[i]));
-      i++;
-    }
-    return x;
+  if (strcmp(op, "-") == 0 && t->children_num == 4){
+    return -eval(t->children[2]);
+  }
+  
+  long x = eval(t->children[2]);
+  int i = 3;
+  while (strstr(t->children[i]->tag, "expr")) {
+    x = eval_op(x, op, eval(t->children[i]));
+    i++;
   }
 
-  return atoi(t->children[1]->contents);
+  return x;
 }
 
 // bonus
@@ -133,7 +130,7 @@ int main(int argc, char **argv) {
                  /add/ | /sub/ | /mul/ | /div/ | /mod/ |/exp/|    \
                  /max/ | /min/ | /- /;                            \
       expr     : <number> | '(' <operator> <expr>+ ')' ;          \
-      lispy    : /^/ <operator>? <expr>+ /$/ ;                    \
+      lispy    : /^/<operator> <expr>+ /$/;          \
     ",
             Number, Operator, Expr, Lispy);
   puts("Lispy Version 0.0.0.0.1");
