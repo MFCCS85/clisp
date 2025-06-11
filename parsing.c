@@ -1,3 +1,4 @@
+#include "error_handling.h"
 #include "mpc.h"
 #include <stdlib.h>
 
@@ -43,46 +44,55 @@ long _min(long x, long y) {
     return y;
 }
 
-long eval_op(long x, char *op, long y) {
+lval eval_op(lval x, char *op, lval y) {
+  if (x.type == LVAL_ERR) {
+    return x;
+  }
+  if (y.type == LVAL_ERR) {
+    return y;
+  }
+
   if (strcmp(op, "+") == 0 || strcmp(op, "add") == 0) {
-    return x + y;
+    return lval_num(x.num + y.num);
   }
   if (strcmp(op, "-") == 0 || strcmp(op, "sub") == 0) {
-    return x - y;
+    return lval_num(x.num - y.num);
   }
   if (strcmp(op, "*") == 0 || strcmp(op, "mul") == 0) {
-    return x * y;
+    return lval_num(x.num * y.num);
   }
   if (strcmp(op, "/") == 0 || strcmp(op, "div") == 0) {
-    return x / y;
+    return y.num == 0 ? lval_err(LERR_DIV_ZRO) : lval_num(x.num / y.num);
   }
   if (strcmp(op, "%") == 0 || strcmp(op, "mod") == 0) {
-    return x % y;
+    return lval_num(x.num / y.num);
   }
   if (strcmp(op, "^") == 0 || strcmp(op, "exp") == 0) {
-    return power(x, y);
+    return lval_num(x.num / y.num);
   }
   if (strcmp(op, "max") == 0) {
-    return _max(x, y);
+    return lval_num(x.num / y.num);
   }
   if (strcmp(op, "min") == 0) {
-    return _min(x, y);
+    return lval_num(x.num / y.num);
   }
-  return 0;
+  return lval_num(0);
 }
 
-long eval(mpc_ast_t *t) {
+lval eval(mpc_ast_t *t) {
   if (strstr(t->tag, "number")) {
-    return atoi(t->contents);
+    errno = 0;
+    long x = strtol(t->contents, NULL, 10);
+    return errno != ERANGE ? lval_num(x) : lval_err(LERR_BAD_NUM);
   }
 
   char *op = t->children[1]->contents;
+  lval x = eval(t->children[2]);
 
-  if (strcmp(op, "-") == 0 && t->children_num == 4){
-    return -eval(t->children[2]);
+  if (strcmp(op, "-") == 0 && t->children_num == 4) {
+    return lval_num(-eval(t->children[2]).num);
   }
-  
-  long x = eval(t->children[2]);
+
   int i = 3;
   while (strstr(t->children[i]->tag, "expr")) {
     x = eval_op(x, op, eval(t->children[i]));
@@ -142,8 +152,10 @@ int main(int argc, char **argv) {
 
     mpc_result_t r;
     if (mpc_parse("<stdin>", input, Lispy, &r)) {
-      long result = eval(r.output);
-      printf("RESULT ---> %li\n", result);
+      lval result = eval(r.output);
+      printf("RESULT --->");
+      lval_print(result);
+      printf("\n");
       printf("LEAVES ---> %li\n", num_leaves(r.output));
       printf("BRANCHES ---> %li\n", num_branches(r.output));
       mpc_ast_delete(r.output);

@@ -6,3 +6,7 @@ typedef struct {
   long num;
   int err;
 } lval;
+
+lval lval_num(long x);
+lval lval_err(int x);
+void lval_print(lval v);
